@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vocabulary Card</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link rel="stylesheet" href="style/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body class="min-h-screen bg-[#f7f7f7] flex items-center justify-center p-6">
+    <main class="w-full max-w-[350px]"></main>
+
+    <dialog id="word_details_modal" class="modal">
+      <div class="modal-box max-w-[460px] rounded-2xl bg-white p-4 shadow-xl">
+        <div class="rounded-lg border border-[#e8f4ff] p-4">
+          <h2 id="details_title" class="text-2xl font-bold">Eager</h2>
+          <p id="details_status" role="status" class="mt-4"></p>
+          <div id="details_content" class="mt-4 space-y-5" hidden>
+            <section>
+              <h3 class="font-semibold">Meaning</h3>
+              <p id="details_meaning" class="mt-1 font_bangla"></p>
+            </section>
+            <section>
+              <h3 class="font-semibold">Example</h3>
+              <p id="details_example" class="mt-1"></p>
+            </section>
+            <section>
+              <h3 class="font-semibold font_bangla">সমার্থক শব্দগুলো</h3>
+              <div
+                id="details_synonyms"
+                class="mt-2 flex flex-wrap gap-2"
+              ></div>
+            </section>
+          </div>
+        </div>
+        <div class="modal-action justify-start">
+          <form method="dialog">
+            <button
+              class="btn border-0 bg-[#4b2be3] text-white hover:bg-[#3f23c5]"
+            >
+              Complete Learning
+            </button>
+          </form>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button aria-label="Close details">Close</button>
+      </form>
+    </dialog>
+
+    <script>
+      const word = document.getElementById("word_title").textContent.trim();
+      const detailsButton = document.getElementById("details_button");
+      const detailsModal = document.getElementById("word_details_modal");
+      const detailsStatus = document.getElementById("details_status");
+      const detailsContent = document.getElementById("details_content");
+      const synonymsContainer = document.getElementById("details_synonyms");
+      let wordDetails;
+
+      // Get the word ID first, then use it to fetch the full details.
+      async function fetchWordDetails() {
+        const wordsResponse = await fetch(
+          "https://openapi.programming-hero.com/api/words/all",
+        );
+        if (!wordsResponse.ok) {
+          throw new Error("Could not load the word list.");
+        }
+
+        const wordsPayload = await wordsResponse.json();
+        const wordEntry = wordsPayload.data?.find(
+          (entry) => entry.word?.toLowerCase() === word.toLowerCase(),
+        );
+        const wordId = wordEntry?.id;
+        if (!wordId) {
+          throw new Error(`Details for "${word}" were not found.`);
+        }
+
+        const detailsResponse = await fetch(
+          `https://openapi.programming-hero.com/api/word/${wordId}`,
+        );
+        if (!detailsResponse.ok) {
+          throw new Error("Could not load the word details.");
+        }
+
+        const detailsPayload = await detailsResponse.json();
+        if (!detailsPayload.data) {
+          throw new Error("The word details are unavailable.");
+        }
+        return detailsPayload.data;
+      }
+
+      // Show each synonym as a separate tag in the modal.
+      function renderSynonyms(synonyms) {
+        synonymsContainer.replaceChildren();
+
+        if (!Array.isArray(synonyms) || synonyms.length === 0) {
+          const emptyMessage = document.createElement("span");
+          emptyMessage.textContent = "Not available";
+          synonymsContainer.appendChild(emptyMessage);
+          return;
+        }
+
+        synonyms.forEach((synonym) => {
+          const tag = document.createElement("span");
+          tag.className =
+            "rounded-md border border-[#d8eafa] bg-[#eef7ff] px-3 py-1.5 text-sm text-gray-700";
+          tag.textContent = synonym;
+          synonymsContainer.appendChild(tag);
+        });
+      }
+
+      // Load and display the details when the info button is clicked.
+      detailsButton.addEventListener("click", async () => {
+        detailsModal.showModal();
+        detailsContent.hidden = true;
+        detailsStatus.textContent = "Loading details...";
+        detailsButton.disabled = true;
+
+        try {
+          wordDetails ??= await fetchWordDetails();
+          const title = wordDetails.word || word;
+          document.getElementById("details_title").textContent =
+            wordDetails.pronunciation
+              ? `${title} (${wordDetails.pronunciation})`
+              : title;
+          document.getElementById("details_meaning").textContent =
+            wordDetails.meaning || "Not available";
+          document.getElementById("details_example").textContent =
+            wordDetails.sentence || "Not available";
+          renderSynonyms(wordDetails.synonyms);
+          detailsStatus.textContent = "";
+          detailsContent.hidden = false;
+        } catch (error) {
+          detailsStatus.textContent =
+            error instanceof Error
+              ? `Could not load details: ${error.message}`
+              : "Could not load details. Please try again.";
+        } finally {
+          detailsButton.disabled = false;
+        }
+      });
+
+      // Speak the card's word when the speaker button is clicked.
+      document.getElementById("speak_button").addEventListener("click", () => {
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = "en-US";
+        window.speechSynthesis.speak(utterance);
+      });
+    </script>
+  </body>
+</html>
