@@ -203,11 +203,26 @@
         id="word_container"
         class="bg-gray-100 w-11/12 mx-auto p-10 my-10 grid grid-cols-1 md:grid-cols-3 gap-5"
       >
-        <div>
-          <p>আপনি এখনো কোন Lesson সিলেক্ট করেন নাই ।</p>
-          <h2>একটি Lesson Select করুন ।</h2>
+        <div class="col-span-3 text-center bg-sky-100 py-10 rounded-sm">
+          <p class="text-xl font-semibold text-gray-600">
+            আপনি এখনো কোন Lesson সিলেক্ট করেন নাই ।
+          </p>
+          <h2 class="text-4xl font-bold">একটি Lesson Select করুন ।</h2>
         </div>
       </section>
+      <!-- Open the modal using ID.showModal() method -->
+      <dialog id="my_modal_5" class="modal modal-bottom sm:modal-middle">
+        <div class="modal-box">
+          <h3 class="text-lg font-bold">Hello!</h3>
+          <p class="py-4">Press ESC key or click the button below to close</p>
+          <div class="modal-action">
+            <form method="dialog">
+              <!-- if there is a button in form, it will close the modal -->
+              <button class="btn text-red-700 text-xl">X</button>
+            </form>
+          </div>
+        </div>
+      </dialog>
     </main>
 
     <!-- Script file -->
