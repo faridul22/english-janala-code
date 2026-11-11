@@ -1,4 +1,20 @@
+const createElements = (array) => {
+  const htmlElement = array.map(
+    (ele) => `<button class="btn mr-2">${ele}<button>`,
+  );
+  return htmlElement.join("");
+};
+const manageSpinner = (status) => {
+  if (status === true) {
+    document.getElementById("spinner").classList.remove("hidden");
+    document.getElementById("word_container").classList.add("hidden");
+  } else {
+    document.getElementById("word_container").classList.remove("hidden");
+    document.getElementById("spinner").classList.add("hidden");
+  }
+};
 const loadLesson = () => {
+  manageSpinner(true);
   fetch("https://openapi.programming-hero.com/api/levels/all")
     .then((res) => res.json())
     .then((lesson) => displayLesson(lesson.data));
@@ -8,6 +24,7 @@ const removeActive = () => {
   lessonBtn.forEach((btn) => btn.classList.remove("active"));
 };
 const loadLevelWord = (id) => {
+  manageSpinner(true);
   if (!id) return;
 
   const url = `https://openapi.programming-hero.com/api/level/${id}`;
@@ -20,7 +37,54 @@ const loadLevelWord = (id) => {
       displayWord(data.data);
     });
 };
+const loadDetails = async (id) => {
+  manageSpinner(true);
+  const url = `https://openapi.programming-hero.com/api/word/${id}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  displayDetails(data.data);
+  word_modal.showModal();
+};
 
+const displayDetails = (data) => {
+  const { word, meaning, pronunciation, sentence, synonyms } = data;
+  const modalContainer = document.getElementById("modal_container");
+  modalContainer.innerHTML = `
+            <!-- modal -->
+            <h1 class="text-3xl font-bold text-gray-900 mb-6">
+             ${word}
+              <span class="text-xl font-normal text-gray-700"
+                >(<i class="fa-solid fa-microphone-lines"></i> :${pronunciation})</span
+              >
+            </h1>
+
+            <!-- Meaning -->
+            <div class="mb-5">
+              <h2 class="text-base font-bold text-gray-900 mb-1">Meaning</h2>
+              <p class="text-lg text-gray-800 font-medium">${meaning}</p>
+            </div>
+
+            <!-- Example -->
+            <div class="mb-6">
+              <h2 class="text-base font-bold text-gray-900 mb-1">Example</h2>
+              <p class="text-base text-gray-700">
+                ${sentence}
+              </p>
+            </div>
+
+            <!-- Synonyms -->
+            <div class="mb-8">
+              <h2 class="text-base font-bold text-gray-900 mb-3">
+                সমার্থক শব্দ গুলো
+              </h2>
+              <div class="">
+              ${createElements(synonyms)}
+              </div>
+            </div>
+             
+  `;
+  manageSpinner(false);
+};
 const displayWord = (words) => {
   const wordContainer = document.getElementById("word_container");
   wordContainer.innerHTML = " ";
@@ -39,7 +103,8 @@ const displayWord = (words) => {
   
             <div class="mt-auto flex w-full items-center justify-between pt-7">
               <button
-                onclick="my_modal_5.showModal()"
+              onclick="loadDetails(${word.id})"
+                // onclick="my_modal_5.showModal()"
                 id="details_button"
                 type="button"
                 aria-label="Word information"
@@ -61,6 +126,7 @@ const displayWord = (words) => {
     wordContainer.appendChild(wordCard);
   }
   loadLevelWord();
+  manageSpinner(false);
 };
 
 const displayLesson = (lessons) => {
@@ -82,5 +148,6 @@ const displayLesson = (lessons) => {
     `;
     levelContainer.appendChild(lessonDiv);
   }
+  manageSpinner(false);
 };
 loadLesson();
